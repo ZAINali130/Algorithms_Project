@@ -2,21 +2,10 @@
 
 namespace AlgorithmsAssignment
 {
-    // Grades as requested in the assignment
+    //  تعريف التقديرات 
     enum StudentGrade { Excellent, VeryGood, Good, Fail }
 
-    class Node
-    {
-        public Student Info;
-        public Node Next, Back; // Back instead of Prev for simplicity
-
-        public Node(Student data)
-        {
-            Info = data;
-            Next = Back = null;
-        }
-    }
-
+    //  كلاس الطالب
     class Student
     {
         public int Id { get; set; }
@@ -39,9 +28,9 @@ namespace AlgorithmsAssignment
 
         private void CalculateResult()
         {
+            // حساب المحصلة (مجموع الاختبارين على 2)
             FinalResult = (Score1 + Score2) / 2.0;
 
-            // Grading logic based on result
             if (FinalResult >= 90) Grade = StudentGrade.Excellent;
             else if (FinalResult >= 80) Grade = StudentGrade.VeryGood;
             else if (FinalResult >= 50) Grade = StudentGrade.Good;
@@ -50,131 +39,112 @@ namespace AlgorithmsAssignment
 
         public void PrintDetails()
         {
-            Console.WriteLine($"ID: {Id} | Name: {Name} | City: {City} | Result: {FinalResult} | Grade: {Grade}");
+            Console.WriteLine($"ID: {Id,-5} | Name: {Name,-10} | Result: {FinalResult,-5} | Grade: {Grade}");
         }
     }
 
-    class StudentList
+    //  عقدة الشجرة )
+    class TreeNode
     {
-        private Node head;
-        private Node LastNode; // Simple name for Tail
+        public Student Info;
+        public TreeNode Left, Right;
 
-        public void InsertBack(Student s)
+        public TreeNode(Student data)
         {
-            Node newNode = new Node(s);
-            if (head == null) head = LastNode = newNode;
-            else
-            {
-                LastNode.Next = newNode;
-                newNode.Back = LastNode;
-                LastNode = newNode;
-            }
-        }
-
-        public void InsertFront(Student s)
-        {
-            Node newNode = new Node(s);
-            if (head == null) head = LastNode = newNode;
-            else
-            {
-                newNode.Next = head;
-                head.Back = newNode;
-                head = newNode;
-            }
-        }
-
-        public void ShowAll()
-        {
-            Node temp = head;
-            while (temp != null)
-            {
-                temp.Info.PrintDetails();
-                temp = temp.Next;
-            }
-        }
-
-        // Recursive Search - Core Requirement
-        public Node FindByScoreRecursive(Node current, double target)
-        {
-            if (current == null) return null;
-            if (current.Info.FinalResult == target) return current;
-            return FindByScoreRecursive(current.Next, target);
-        }
-
-        public Node GetHead() => head;
-
-        // Sorting using Bubble Sort
-        public void Sort(bool byName)
-        {
-            if (head == null) return;
-            bool swapped;
-            do
-            {
-                swapped = false;
-                Node curr = head;
-                while (curr.Next != null)
-                {
-                    bool condition = byName
-                        ? string.Compare(curr.Info.Name, curr.Next.Info.Name) > 0
-                        : curr.Info.FinalResult > curr.Next.Info.FinalResult;
-
-                    if (condition)
-                    {
-                        Student temp = curr.Info;
-                        curr.Info = curr.Next.Info;
-                        curr.Next.Info = temp;
-                        swapped = true;
-                    }
-                    curr = curr.Next;
-                }
-            } while (swapped);
+            Info = data;
+            Left = Right = null;
         }
     }
 
+    //  كلاس الشجرة (Binary Search Tree)
+    class StudentTree
+    {
+        private TreeNode root;
+
+        // إضافة طالب - ترتيب الشجرة يعتمد على ID الطالب
+        public void Insert(Student s) => root = InsertRecursive(root, s);
+
+        private TreeNode InsertRecursive(TreeNode root, Student s)
+        {
+            if (root == null) return new TreeNode(s);
+            if (s.Id < root.Info.Id) root.Left = InsertRecursive(root.Left, s);
+            else if (s.Id > root.Info.Id) root.Right = InsertRecursive(root.Right, s);
+            return root;
+        }
+
+        //  عرض الطلاب الذين محصلتهم أعلى من 85
+        public void ShowHighAchievers(TreeNode node)
+        {
+            if (node == null) return;
+            ShowHighAchievers(node.Left);
+            if (node.Info.FinalResult > 85) node.Info.PrintDetails();
+            ShowHighAchievers(node.Right);
+        }
+
+        //  حذف طالب برقم محدد
+        public void Delete(int id) => root = DeleteRecursive(root, id);
+
+        private TreeNode DeleteRecursive(TreeNode root, int id)
+        {
+            if (root == null) return null;
+
+            if (id < root.Info.Id) root.Left = DeleteRecursive(root.Left, id);
+            else if (id > root.Info.Id) root.Right = DeleteRecursive(root.Right, id);
+            else
+            {
+                // حالة العقدة بطفل واحد أو بدون أطفال
+                if (root.Left == null) return root.Right;
+                if (root.Right == null) return root.Left;
+
+                // حالة العقدة بطفلين: نأتي بأصغر قيمة من الطرف الأيمن
+                root.Info = FindMin(root.Right);
+                root.Right = DeleteRecursive(root.Right, root.Info.Id);
+            }
+            return root;
+        }
+
+        private Student FindMin(TreeNode node)
+        {
+            Student min = node.Info;
+            while (node.Left != null) { node = node.Left; min = node.Info; }
+            return min;
+        }
+
+        public TreeNode GetRoot() => root;
+    }
+
+    
     class Program
     {
         static void Main()
         {
-            StudentList list = new StudentList();
+            StudentTree tree = new StudentTree();
 
-            // Initial 5 students
-            for (int i = 1; i <= 5; i++)
-            {
-                Console.WriteLine($"--- Student {i} Data ---");
-                list.InsertBack(CreateStudent(i));
-            }
+            // إدخال بيانات تجريبية (يمكنك جعلها Input من المستخدم)
+            tree.Insert(new Student(10, "Ahmad", "Damascus", 90, 88));
+            tree.Insert(new Student(5, "Lina", "Homs", 70, 65));
+            tree.Insert(new Student(15, "Samer", "Aleppo", 95, 92));
+            tree.Insert(new Student(8, "Noor", "Hama", 88, 84));
 
-            while (true)
-            {
-                Console.WriteLine("\n[1]Show [2]Sort Name [3]Sort Score [4]Search [5]Add Front [6]Add Back [7]Exit");
-                string op = Console.ReadLine();
-                if (op == "7") break;
+            Console.WriteLine("=== Students with Average > 85 ===");
+            tree.ShowHighAchievers(tree.GetRoot());
 
-                switch (op)
-                {
-                    case "1": list.ShowAll(); break;
-                    case "2": list.Sort(true); list.ShowAll(); break;
-                    case "3": list.Sort(false); list.ShowAll(); break;
-                    case "4":
-                        Console.Write("Enter Score to find: ");
-                        double target = double.Parse(Console.ReadLine());
-                        var res = list.FindByScoreRecursive(list.GetHead(), target);
-                        if (res != null) res.Info.PrintDetails();
-                        else Console.WriteLine("Not Found!");
-                        break;
-                    case "5": list.InsertFront(CreateStudent(0)); break;
-                    case "6": list.InsertBack(CreateStudent(0)); break;
-                }
-            }
+            Console.WriteLine("\n=== Deleting Student with ID 5 ===");
+            tree.Delete(5);
+
+            Console.WriteLine("\n=== All Students in Tree (Sorted by ID) ===");
+            PrintInOrder(tree.GetRoot());
+
+            Console.WriteLine("\nPress any key to exit...");
+            Console.ReadKey();
         }
 
-        static Student CreateStudent(int id)
+        static void PrintInOrder(TreeNode node)
         {
-            Console.Write("Name: "); string n = Console.ReadLine();
-            Console.Write("City: "); string c = Console.ReadLine();
-            Console.Write("Exam 1 Score: "); double s1 = double.Parse(Console.ReadLine());
-            Console.Write("Exam 2 Score: "); double s2 = double.Parse(Console.ReadLine());
-            return new Student(id, n, c, s1, s2);
+            if (node == null) return;
+            PrintInOrder(node.Left);
+            node.Info.PrintDetails();
+            PrintInOrder(node.Right);
         }
     }
 }
