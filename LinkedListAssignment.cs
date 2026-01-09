@@ -2,85 +2,106 @@ using System;
 
 namespace AlgorithmsAssignment
 {
-    // تعريف التقديرات الدراسية 
-    enum StudentGrade { Excellent, VeryGood, Good, Fail }
-
-    // كلاس العقدة لتمثيل كل طالب في اللائحة المزدوجة
-    class Node
+  
+    class Program
     {
-        public Student Info; // بيانات الطالب
-        public Node Next, Back; // Next للعقدة التالية و Back للعقدة السابقة
+         تعريف التقديرات الدراسية
+        enum StudentGrade { Excellent, VeryGood, Good, Fail }
 
-        public Node(Student data)
+        تعريف العقدة (Node) وهي تحتوي على بيانات الطالب وروابط اللائحة معاً
+        class Node
         {
-            Info = data;
-            Next = Back = null;
-        }
-    }
+            // بيانات الطالب  
+            public int Id;
+            public string Name;
+            public string City;
+            public double Score1;
+            public double Score2;
+            public double FinalResult;
+            public StudentGrade Grade;
 
-    // كلاس  معلومات الطالب وطريقة حساب نتيجته
-    class Student
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string City { get; set; }
-        public double Score1 { get; set; }
-        public double Score2 { get; set; }
-        public double FinalResult { get; set; }
-        public StudentGrade Grade { get; set; }
+            // روابط اللائحة المزدوجة (التالي والسابق)
+            public Node Next;
+            public Node Back;
 
-        public Student(int id, string name, string city, double s1, double s2)
-        {
-            Id = id;
-            Name = name;
-            City = city;
-            Score1 = s1;
-            Score2 = s2;
-            CalculateResult(); // حساب النتيجة والتقدير تلقائياً عند الإنشاء
-        }
-
-        // دالة لحساب المعدل وتحديد التقدير (ممتاز، جيد جداً، جيد، راسب)
-        private void CalculateResult()
-        {
-            FinalResult = (Score1 + Score2) / 2.0;
-
-            if (FinalResult >= 90) Grade = StudentGrade.Excellent;
-            else if (FinalResult >= 80) Grade = StudentGrade.VeryGood;
-            else if (FinalResult >= 50) Grade = StudentGrade.Good;
-            else Grade = StudentGrade.Fail;
-        }
-
-        // دالة لطباعة بيانات الطالب بشكل منظم
-        public void PrintDetails()
-        {
-            Console.WriteLine($"ID: {Id} | الاسم: {Name} | المدينة: {City} | المعدل: {FinalResult} | التقدير: {Grade}");
-        }
-    }
-
-    // كلاس إدارة لائحة الطلاب (اللائحة المزدوجة)
-    class StudentList
-    {
-        private Node head; // رأس اللائحة
-        private Node LastNode; // نهاية اللائحة
-
-        // إضافة طالب في نهاية اللائحة
-        public void InsertBack(Student s)
-        {
-            Node newNode = new Node(s);
-            if (head == null) head = LastNode = newNode;
-            else
+            public Node(int id, string name, string city, double s1, double s2)
             {
-                LastNode.Next = newNode;
-                newNode.Back = LastNode;
-                LastNode = newNode;
+                this.Id = id;
+                this.Name = name;
+                this.City = city;
+                this.Score1 = s1;
+                this.Score2 = s2;
+                
+                // حساب المعدل والتقدير فوراً عند إنشاء العقدة
+                this.FinalResult = (s1 + s2) / 2.0;
+                if (FinalResult >= 90) Grade = StudentGrade.Excellent;
+                else if (FinalResult >= 80) Grade = StudentGrade.VeryGood;
+                else if (FinalResult >= 50) Grade = StudentGrade.Good;
+                else Grade = StudentGrade.Fail;
+
+                this.Next = null;
+                this.Back = null;
             }
         }
 
-        // إضافة طالب في بداية اللائحة
-        public void InsertFront(Student s)
+        //  التحكم باللائحة (الرأس والنهاية)
+        static Node head = null;
+        static Node lastNode = null;
+
+     
+        static void Main(string[] args)
         {
-            Node newNode = new Node(s);
-            if (head == null) head = LastNode = newNode;
+            // إدخال بيانات 5 طلاب تلقائياً عند بدء التشغيل لتعبئة القائمة
+            Console.WriteLine("=== مرحباً بك في نظام إدارة الطلاب (Linked List) ===");
+            for (int i = 1; i <= 5; i++)
+            {
+                Console.WriteLine($"\n--- إدخال بيانات الطالب رقم {i} ---");
+                InsertAtBack();
+            }
+
+    
+            while (true)
+            {
+                Console.WriteLine("\n--------------------------------------------------");
+                Console.WriteLine("[1] عرض الطلاب [2] ترتيب بالاسم [3] ترتيب بالمعدل [4] بحث عودي [5] إضافة للبداية [6] إضافة للنهاية [7] خروج");
+                Console.Write("اختر العملية المطلوبة: ");
+                string choice = Console.ReadLine();
+
+                if (choice == "7") break;
+
+                switch (choice)
+                {
+                    case "1": ShowStudents(); break;
+                    case "2": SortBy(true); ShowStudents(); break;
+                    case "3": SortBy(false); ShowStudents(); break;
+                    case "4": SearchProcess(); break;
+                    case "5": InsertAtFront(); break;
+                    case "6": InsertAtBack(); break;
+                    default: Console.WriteLine("اختيار غير صحيح!"); break;
+                }
+            }
+        }
+
+       
+
+        // دالة الإضافة في نهاية اللائحة
+        static void InsertAtBack()
+        {
+            Node newNode = InputStudentData();
+            if (head == null) head = lastNode = newNode;
+            else
+            {
+                lastNode.Next = newNode;
+                newNode.Back = lastNode;
+                lastNode = newNode;
+            }
+        }
+
+        // دالة الإضافة في بداية اللائحة
+        static void InsertAtFront()
+        {
+            Node newNode = InputStudentData();
+            if (head == null) head = lastNode = newNode;
             else
             {
                 newNode.Next = head;
@@ -89,31 +110,45 @@ namespace AlgorithmsAssignment
             }
         }
 
-        // عرض جميع الطلاب الموجودين في اللائحة
-        public void ShowAll()
+        // دالة عرض جميع العقد في اللائحة
+        static void ShowStudents()
         {
+            if (head == null) { Console.WriteLine("القائمة فارغة!"); return; }
             Node temp = head;
+            Console.WriteLine("\nقائمة الطلاب الحالية:");
             while (temp != null)
             {
-                temp.Info.PrintDetails();
+                Console.WriteLine($"ID: {temp.Id} | الاسم: {temp.Name} | المعدل: {temp.FinalResult} | التقدير: {temp.Grade}");
                 temp = temp.Next;
             }
         }
 
-        // دالة البحث العودي (Recursive Search) -    
-        public Node FindByScoreRecursive(Node current, double target)
+        //  دالة البحث العودي 
+        static Node RecursiveSearch(Node current, double target)
         {
-            if (current == null) return null; // إذا وصلنا للنهاية ولم نجد المعدل
-            if (current.Info.FinalResult == target) return current; // إذا وجدنا المعدل المطلوب
-            return FindByScoreRecursive(current.Next, target); // الانتقال للعقدة التالية بشكل عودي
+            if (current == null) return null;
+            if (current.FinalResult == target) return current;
+            return RecursiveSearch(current.Next, target);
         }
 
-        public Node GetHead() => head;
-
-        // خوارزمية ترتيب الطلاب (Bubble Sort) حسب الاسم أو المعدل
-        public void Sort(bool byName)
+        // دالة لتنظيم عملية البحث وطلب المعدل من المستخدم
+        static void SearchProcess()
         {
-            if (head == null) return;
+            Console.Write("أدخل المعدل الدقيق للبحث عنه: ");
+            if (double.TryParse(Console.ReadLine(), out double score))
+            {
+                Node result = RecursiveSearch(head, score);
+                if (result != null)
+                    Console.WriteLine($"=> تم العثور على الطالب: {result.Name} من مدينة {result.City}");
+                else
+                    Console.WriteLine("=> عذراً، لا يوجد طالب بهذا المعدل.");
+            }
+        }
+
+        // د للترتيب حسب الاسم أو المعدل
+        static void SortBy(bool nameOption)
+        {
+            if (head == null || head.Next == null) return;
             bool swapped;
             do
             {
@@ -121,70 +156,32 @@ namespace AlgorithmsAssignment
                 Node curr = head;
                 while (curr.Next != null)
                 {
-                    bool condition = byName
-                        ? string.Compare(curr.Info.Name, curr.Next.Info.Name) > 0
-                        : curr.Info.FinalResult > curr.Next.Info.FinalResult;
+                    bool shouldSwap = nameOption 
+                        ? string.Compare(curr.Name, curr.Next.Name) > 0 
+                        : curr.FinalResult > curr.Next.FinalResult;
 
-                    if (condition)
+                    if (shouldSwap)
                     {
-                        // تبديل البيانات فقط بين العقد
-                        Student temp = curr.Info;
-                        curr.Info = curr.Next.Info;
-                        curr.Next.Info = temp;
+                        // تبديل البيانات داخل العقد
+                        string tName = curr.Name; curr.Name = curr.Next.Name; curr.Next.Name = tName;
+                        double tRes = curr.FinalResult; curr.FinalResult = curr.Next.FinalResult; curr.Next.FinalResult = tRes;
+                        string tCity = curr.City; curr.City = curr.Next.City; curr.Next.City = tCity;
                         swapped = true;
                     }
                     curr = curr.Next;
                 }
             } while (swapped);
-        }
-    }
-
-    class Program
-    {
-        static void Main()
-        {
-            StudentList list = new StudentList();
-
-            // إدخال بيانات 5 طلاب عند تشغيل البرنامج
-            for (int i = 1; i <= 5; i++)
-            {
-                Console.WriteLine($"--- بيانات الطالب {i} ---");
-                list.InsertBack(CreateStudent(i));
-            }
-
-            // قائمة الخيارات للمستخدم
-            while (true)
-            {
-                Console.WriteLine("\n[1]عرض [2]ترتيب بالاسم [3]ترتيب بالمعدل [4]بحث [5]إضافة للبداية [6]إضافة للنها [7]خروج");
-                string op = Console.ReadLine();
-                if (op == "7") break;
-
-                switch (op)
-                {
-                    case "1": list.ShowAll(); break;
-                    case "2": list.Sort(true); list.ShowAll(); break;
-                    case "3": list.Sort(false); list.ShowAll(); break;
-                    case "4":
-                        Console.Write("أدخل المعدل للبحث عنه: ");
-                        double target = double.Parse(Console.ReadLine());
-                        var res = list.FindByScoreRecursive(list.GetHead(), target);
-                        if (res != null) res.Info.PrintDetails();
-                        else Console.WriteLine("لم يتم العثور على النتيجة!");
-                        break;
-                    case "5": list.InsertFront(CreateStudent(0)); break;
-                    case "6": list.InsertBack(CreateStudent(0)); break;
-                }
-            }
+            Console.WriteLine("تمت عملية الترتيب.");
         }
 
-        // دالة  لإنشاء كائن طالب من إدخال المستخدم
-        static Student CreateStudent(int id)
+        // دالة مساعدة لطلب البيانات 
+        static Node InputStudentData()
         {
             Console.Write("الاسم: "); string n = Console.ReadLine();
             Console.Write("المدينة: "); string c = Console.ReadLine();
-            Console.Write("درجة الامتحان 1: "); double s1 = double.Parse(Console.ReadLine());
-            Console.Write("درجة الامتحان 2: "); double s2 = double.Parse(Console.ReadLine());
-            return new Student(id, n, c, s1, s2);
+            Console.Write("درجة الاختبار 1: "); double s1 = double.Parse(Console.ReadLine());
+            Console.Write("درجة الاختبار 2: "); double s2 = double.Parse(Console.ReadLine());
+            return new Node(0, n, c, s1, s2);
         }
     }
 }
